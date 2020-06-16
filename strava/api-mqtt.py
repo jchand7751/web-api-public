@@ -96,6 +96,51 @@ for data in list:
             qcount += 1
 runCount = qcount
 
+#Get the count of swims
+qcount = 0
+for data in list:
+        print(data)
+        if list[data].get("Type") == "Swim":
+            qcount += 1
+swimCount = qcount
+
+#Swim yards
+swimYards = 0 
+for data in list:
+        print(data)
+        if list[data].get("Type") == "Swim":
+            swimYards += list[data].get("Distance")
+swimYards = round((swimYards * 1.09361), 1 )
+
+#Swim pace
+def Average(lst): 
+    return sum(lst) / len(lst)
+swimPace = []
+for data in list:
+        print(data)
+        if list[data].get("Type") == "Swim":
+            swimPace.append((list[data].get("Average Speed") * 1.0936))
+swimPace = round((Average(swimPace)), 2 )
+tempNum = round((100/swimPace), 2 )
+tempNum = round((tempNum/60), 2 )
+numRight = tempNum.__str__().rsplit(".")[1]
+numLeft = tempNum.__str__().rsplit(".")[0]
+numRight = round(float("." + numRight) * 60)
+swimPace = numLeft + ":" + numRight.__str__().zfill(2)
+swimPace = str(swimPace) + "/100yd"
+
+#Swim time
+totalTime = 0 
+for data in list:
+        print(data)
+        if list[data].get("Type") == "Swim":
+            totalTime += list[data].get("Moving Time")
+totalTime = round(((totalTime / 60) / 60) , 2 )
+numRight = totalTime.__str__().rsplit(".")[1]
+numLeft = totalTime.__str__().rsplit(".")[0]
+numRight = round(float("." + numRight) * 60)
+totalSwimTime = numLeft + ":" + numRight.__str__().zfill(2)
+
 #Get the total of ride miles
 rideMiles = 0 
 for data in list:
@@ -122,6 +167,18 @@ for data in list:
             rideSpeed.append((list[data].get("Average Speed") * 2.2369))
 rideSpeed = round((Average(rideSpeed)), 1 )
 
+#Ride time
+totalTime = 0 
+for data in list:
+        print(data)
+        if list[data].get("Type") == "VirtualRide" or list[data].get("Type") == "Ride":
+            totalTime += list[data].get("Moving Time")
+totalTime = round(((totalTime / 60) / 60) , 2 )
+numRight = totalTime.__str__().rsplit(".")[1]
+numLeft = totalTime.__str__().rsplit(".")[0]
+numRight = round(float("." + numRight) * 60)
+totalRideTime = numLeft + ":" + numRight.__str__().zfill(2)
+
 #Average Run pace
 def Average(lst): 
     return sum(lst) / len(lst)
@@ -136,6 +193,18 @@ numRight = tempNum.__str__().rsplit(".")[1]
 numLeft = tempNum.__str__().rsplit(".")[0]
 numRight = round(float("." + numRight) * 60)
 runSpeed = numLeft + ":" + numRight.__str__().zfill(2)
+
+#Run time
+totalTime = 0 
+for data in list:
+        print(data)
+        if list[data].get("Type") == "Run":
+            totalTime += list[data].get("Moving Time")
+totalTime = round(((totalTime / 60) / 60) , 2 )
+numRight = totalTime.__str__().rsplit(".")[1]
+numLeft = totalTime.__str__().rsplit(".")[0]
+numRight = round(float("." + numRight) * 60)
+totalRunTime = numLeft + ":" + numRight.__str__().zfill(2)
 
 #Average Ride watts
 def Average(lst): 
@@ -173,7 +242,7 @@ for data in list:
 #Total time based on activity
 
 #Create the list to send to devices/MQTT
-summaryList = {"Total Activities": activityCount , "Total Miles": totalMiles , "Total Time": totalTime , "Average Ride Speed": rideSpeed , "Average Watts": rideWatts , "Total Rides": rideCount , "Total Ride Miles": rideMiles , "Average Run Pace": runSpeed , "Total Runs": runCount , "Total Run Miles": runMiles }
+summaryList = {"Total Activities": activityCount , "Total Miles": totalMiles , "Total Time": totalTime , "Total Swims": swimCount , "Total Swim Time": totalSwimTime , "Total Swim Yards": swimYards , "Average Swim Pace": swimPace , "Average Ride Speed": rideSpeed , "Average Watts": rideWatts , "Total Rides": rideCount , "Total Ride Miles": rideMiles , "Total Ride Time": totalRideTime , "Average Run Pace": runSpeed , "Total Run Time": totalRunTime , "Total Runs": runCount , "Total Run Miles": runMiles }
 
 #For devices without network, write directly to it
 with open('E:\stats.json', 'w') as filehandle:
