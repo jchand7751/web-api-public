@@ -5,6 +5,7 @@ from swagger_client.rest import ApiException
 from pprint import pprint
 import requests
 import datetime
+from datetime import datetime, timedelta
 import paho.mqtt.client as mqtt
 import shutil
 from secrets import secrets
@@ -27,10 +28,11 @@ jsonPostData = {'client_id': secrets["clientid"], 'client_secret': secrets["clie
 x = requests.post(tokenURL, data = jsonPostData)
 token = x.json().get("access_token")
 refreshToken = x.json().get("refresh_token")
+#token = "847214ca03485a9d6891c7f9848cf084895b66a8"
 print("Current Token:")
 print(token)
 print("Current Refresh Token:")
-print(refreshToken)
+#print(refreshToken)
 
 ### MQTT Setup ###
 
@@ -104,118 +106,133 @@ for data in list:
             qcount += 1
 swimCount = qcount
 
-#Swim yards
-swimYards = 0 
-for data in list:
-        print(data)
-        if list[data].get("Type") == "Swim":
-            swimYards += list[data].get("Distance")
-swimYards = round((swimYards * 1.09361), 1 )
+if swimCount > 0:
+    #Swim yards
+    swimYards = 0 
+    for data in list:
+            print(data)
+            if list[data].get("Type") == "Swim":
+                swimYards += list[data].get("Distance")
+    swimYards = round((swimYards * 1.09361), 1 )
 
-#Swim pace
-def Average(lst): 
-    return sum(lst) / len(lst)
-swimPace = []
-for data in list:
-        print(data)
-        if list[data].get("Type") == "Swim":
-            swimPace.append((list[data].get("Average Speed") * 1.0936))
-swimPace = round((Average(swimPace)), 2 )
-tempNum = round((100/swimPace), 2 )
-tempNum = round((tempNum/60), 2 )
-numRight = tempNum.__str__().rsplit(".")[1]
-numLeft = tempNum.__str__().rsplit(".")[0]
-numRight = round(float("." + numRight) * 60)
-swimPace = numLeft + ":" + numRight.__str__().zfill(2)
-swimPace = str(swimPace) + "/100yd"
+    #Swim pace
+    def Average(lst): 
+        return sum(lst) / len(lst)
+    swimPace = []
+    for data in list:
+            print(data)
+            if list[data].get("Type") == "Swim":
+                swimPace.append((list[data].get("Average Speed") * 1.0936))
+    swimPace = round((Average(swimPace)), 2 )
+    tempNum = round((100/swimPace), 2 )
+    tempNum = round((tempNum/60), 2 )
+    numRight = tempNum.__str__().rsplit(".")[1]
+    numLeft = tempNum.__str__().rsplit(".")[0]
+    numRight = round(float("." + numRight) * 60)
+    swimPace = numLeft + ":" + (int(numRight)).__str__().zfill(2)
+    swimPace = str(swimPace) + "/100yd"
 
-#Swim time
-totalTime = 0 
-for data in list:
-        print(data)
-        if list[data].get("Type") == "Swim":
-            totalTime += list[data].get("Moving Time")
-totalTime = round(((totalTime / 60) / 60) , 2 )
-numRight = totalTime.__str__().rsplit(".")[1]
-numLeft = totalTime.__str__().rsplit(".")[0]
-numRight = round(float("." + numRight) * 60)
-totalSwimTime = numLeft + ":" + numRight.__str__().zfill(2)
+    #Swim time
+    totalTime = 0 
+    for data in list:
+            print(data)
+            if list[data].get("Type") == "Swim":
+                totalTime += list[data].get("Moving Time")
+    totalTime = round(((float(totalTime) / 60) / 60) , 2 )
+    numRight = totalTime.__str__().rsplit(".")[1]
+    numLeft = totalTime.__str__().rsplit(".")[0]
+    numRight = round(float("." + numRight) * 60)
+    totalSwimTime = numLeft + ":" + (int(numRight)).__str__().zfill(2)
+else:
+    swimYards = 0
+    swimPace = 0
+    totalSwimTime = 0
 
-#Get the total of ride miles
-rideMiles = 0 
-for data in list:
-        print(data)
-        if list[data].get("Type") == "VirtualRide" or list[data].get("Type") == "Ride":
-            rideMiles += list[data].get("Distance")
-rideMiles = round((rideMiles * 0.00062), 1 )
+if rideCount > 0:
+    #Get the total of ride miles
+    rideMiles = 0 
+    for data in list:
+            print(data)
+            if list[data].get("Type") == "VirtualRide" or list[data].get("Type") == "Ride":
+                rideMiles += list[data].get("Distance")
+    rideMiles = round((rideMiles * 0.00062), 1 )
 
-#Get the total of run miles
-runMiles = 0 
-for data in list:
-        print(data)
-        if list[data].get("Type") == "Run":
-            runMiles += list[data].get("Distance")
-runMiles = round((runMiles * 0.00062), 1 )
+    #Average Ride speed
+    def Average(lst): 
+        return sum(lst) / len(lst)
+    rideSpeed = []
+    for data in list:
+            print(data)
+            if list[data].get("Type") == "VirtualRide" or list[data].get("Type") == "Ride":
+                rideSpeed.append((list[data].get("Average Speed") * 2.2369))
+    rideSpeed = round((Average(rideSpeed)), 1 )
 
-#Average Ride speed
-def Average(lst): 
-    return sum(lst) / len(lst)
-rideSpeed = []
-for data in list:
-        print(data)
-        if list[data].get("Type") == "VirtualRide" or list[data].get("Type") == "Ride":
-            rideSpeed.append((list[data].get("Average Speed") * 2.2369))
-rideSpeed = round((Average(rideSpeed)), 1 )
-
-#Ride time
-totalTime = 0 
-for data in list:
+    #Ride time
+    totalTime = 0 
+    for data in list:
         print(data)
         if list[data].get("Type") == "VirtualRide" or list[data].get("Type") == "Ride":
             totalTime += list[data].get("Moving Time")
-totalTime = round(((totalTime / 60) / 60) , 2 )
-numRight = totalTime.__str__().rsplit(".")[1]
-numLeft = totalTime.__str__().rsplit(".")[0]
-numRight = round(float("." + numRight) * 60)
-totalRideTime = numLeft + ":" + numRight.__str__().zfill(2)
+    totalTime = round(((float(totalTime) / 60) / 60) , 2 )
+    numRight = totalTime.__str__().rsplit(".")[1]
+    numLeft = totalTime.__str__().rsplit(".")[0]
+    numRight = round(float("." + numRight) * 60)
+    totalRideTime = numLeft + ":" + (int(numRight)).__str__().zfill(2)
 
-#Average Run pace
-def Average(lst): 
-    return sum(lst) / len(lst)
-runSpeed = []
-for data in list:
-        print(data)
-        if list[data].get("Type") == "Run":
-            runSpeed.append((list[data].get("Average Speed") * 2.2369))
-runSpeed = round((Average(runSpeed)), 1 )
-tempNum = round((60/runSpeed), 2 )
-numRight = tempNum.__str__().rsplit(".")[1]
-numLeft = tempNum.__str__().rsplit(".")[0]
-numRight = round(float("." + numRight) * 60)
-runSpeed = numLeft + ":" + numRight.__str__().zfill(2)
-
-#Run time
-totalTime = 0 
-for data in list:
-        print(data)
-        if list[data].get("Type") == "Run":
-            totalTime += list[data].get("Moving Time")
-totalTime = round(((totalTime / 60) / 60) , 2 )
-numRight = totalTime.__str__().rsplit(".")[1]
-numLeft = totalTime.__str__().rsplit(".")[0]
-numRight = round(float("." + numRight) * 60)
-totalRunTime = numLeft + ":" + numRight.__str__().zfill(2)
-
-#Average Ride watts
-def Average(lst): 
-    return sum(lst) / len(lst)
-rideWatts = []
-for data in list:
+    #Average Ride watts
+    def Average(lst): 
+        return sum(lst) / len(lst)
+    rideWatts = []
+    for data in list:
         print(data)
         if list[data].get("Type") == "VirtualRide" or list[data].get("Type") == "Ride":
             rideWatts.append((list[data].get("Average Watts")))
-rideWatts = round((Average(rideWatts)), 1 )
+    rideWatts = round((Average(rideWatts)), 1 )
+else:
+    rideMiles = 0
+    rideSpeed = 0
+    totalRideTime = 0
 
+if runCount > 0:
+    #Get the total of run miles
+    runMiles = 0 
+    for data in list:
+            print(data)
+            if list[data].get("Type") == "Run":
+                runMiles += list[data].get("Distance")
+    runMiles = round((runMiles * 0.00062), 1 )
+
+    #Average Run pace
+    def Average(lst): 
+        return sum(lst) / len(lst)
+    runSpeed = []
+    for data in list:
+            print(data)
+            if list[data].get("Type") == "Run":
+                runSpeed.append((list[data].get("Average Speed") * 2.2369))
+    runSpeed = round((Average(runSpeed)), 1 )
+    tempNum = round((60/runSpeed), 2 )
+    numRight = tempNum.__str__().rsplit(".")[1]
+    numLeft = tempNum.__str__().rsplit(".")[0]
+    numRight = round(float("." + numRight) * 60)
+    runSpeed = numLeft + ":" + (int(numRight)).__str__().zfill(2)
+
+    #Run time
+    totalTime = 0 
+    for data in list:
+            print(data)
+            if list[data].get("Type") == "Run":
+                totalTime += list[data].get("Moving Time")
+    totalTime = round(((float(totalTime) / 60) / 60) , 2 )
+    numRight = totalTime.__str__().rsplit(".")[1]
+    numLeft = totalTime.__str__().rsplit(".")[0]
+    numRight = round(float("." + numRight) * 60)
+    totalRunTime = numLeft + ":" + (int(numRight)).__str__().zfill(2)
+else:
+    runSpeed = 0
+    totalRunTime = 0
+    runMiles = 0
+    
 #Total distance
 totalMiles = 0 
 for data in list:
@@ -228,11 +245,11 @@ totalTime = 0
 for data in list:
         print(data)
         totalTime += list[data].get("Moving Time")
-totalTime = round(((totalTime / 60) / 60) , 2 )
+totalTime = round(((float(totalTime) / 60) / 60) , 2 )
 numRight = totalTime.__str__().rsplit(".")[1]
 numLeft = totalTime.__str__().rsplit(".")[0]
 numRight = round(float("." + numRight) * 60)
-totalTime = numLeft + ":" + numRight.__str__().zfill(2)
+totalTime = numLeft + ":" + (int(numRight)).__str__().zfill(2)
 
 #Active days
 activeDays = []
@@ -241,16 +258,34 @@ for data in list:
 
 #Total time based on activity
 
+#Fitness and Form
+startdate = datetime.today() - timedelta(days=7)
+startdateyear = int(startdate.year)
+startdatemonth = int(startdate.month).__str__().zfill(2)
+startdateday = int(startdate.day).__str__().zfill(2)
+
+currentday = datetime.today()
+currentdayyear = currentday.year
+currentdaymonth = int(currentday.month).__str__().zfill(2)
+currentdayday = int(currentday.day).__str__().zfill(2)
+
+#URL = "https://www.wattsboard.com/users/84827/performance.json?start_date=2021-03-03 00:00:00 UTC\u0026end_date=2021-03-10 23:59:59 UTC"
+URL = "https://www.wattsboard.com/users/84827/performance.json?start_date=%s-%s-%s 00:00:00 UTC\u0026end_date=%s-%s-%s 23:59:59 UTC" %(startdateyear, startdatemonth, startdateday, currentdayyear, currentdaymonth, currentdayday)
+response = requests.get(URL)
+fitness = response.json()[1]['data'][-1][1]
+form = response.json()[2]['data'][-1][1]
+
+
 #Create the list to send to devices/MQTT
-summaryList = {"Total Activities": activityCount , "Total Miles": totalMiles , "Total Time": totalTime , "Total Swims": swimCount , "Total Swim Time": totalSwimTime , "Total Swim Yards": swimYards , "Average Swim Pace": swimPace , "Average Ride Speed": rideSpeed , "Average Watts": rideWatts , "Total Rides": rideCount , "Total Ride Miles": rideMiles , "Total Ride Time": totalRideTime , "Average Run Pace": runSpeed , "Total Run Time": totalRunTime , "Total Runs": runCount , "Total Run Miles": runMiles }
+summaryList = {"Total Activities": activityCount , "Total Miles": totalMiles , "Total Time": totalTime , "Total Swims": swimCount , "Total Swim Time": totalSwimTime , "Total Swim Yards": swimYards , "Average Swim Pace": swimPace , "Average Ride Speed": rideSpeed , "Average Watts": rideWatts , "Total Rides": rideCount , "Total Ride Miles": rideMiles , "Total Ride Time": totalRideTime , "Average Run Pace": runSpeed , "Total Run Time": totalRunTime , "Total Runs": runCount , "Total Run Miles": runMiles , "Fitness": fitness , "Form": form }
 
 #For devices without network, write directly to it
-with open('E:\stats.json', 'w') as filehandle:
-    for listitem in summaryList:
-        value = summaryList[listitem]
-        line = '%s:%s\n' %(listitem, value)
-        filehandle.write(line)
-filehandle.close()
+#with open('E:\stats.json', 'w') as filehandle:
+#    for listitem in summaryList:
+#        value = summaryList[listitem]
+#        line = '%s:%s\n' %(listitem, value)
+#        filehandle.write(line)
+#filehandle.close()
 
 #Publish to MQTT, retain the message so each run will pull the current stats
 returncode = client.publish(secrets["mqtopic"],summaryList.__str__(), retain=True)
@@ -260,7 +295,8 @@ returncode = client.publish(secrets["mqtopic"],summaryList.__str__(), retain=Tru
 #Update token
 filehandle = open(secrets["secretspath"], 'r')
 #output file to write the result to
-fout = open("c:\\temp\\secrets.py", "wt")
+#fout = open("c:\\temp\\secrets.py", "wt")
+fout = open("/tmp/secrets.py", "wt")
 for line in filehandle:
     fout.write(line.replace(secrets["accesstoken"], token))
 
@@ -268,7 +304,9 @@ filehandle.close()
 fout.close()
 
 #Get the new temp file and the existing secrets file
-src_file = "C:\\temp\\secrets.py" 
+#src_file = "C:\\temp\\secrets.py"
+src_file = "/tmp/secrets.py"
+
 dest_file = secrets["secretspath"] 
 
 # move method to move the file
